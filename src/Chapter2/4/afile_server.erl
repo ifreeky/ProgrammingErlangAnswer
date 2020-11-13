@@ -18,8 +18,13 @@ loop(Dir) ->
   receive
     {Client, list_dir} ->
       Client ! {self(), file:list_dir(Dir)};
-    {Client, {get_file,File}} ->
-      Full  = filename:join(Dir, File),
-      Client ! {self(), file:read_file(Full)}
+    {Client, {get_file, File}} ->
+      Full = filename:join(Dir, File),
+      Client ! {self(), file:read_file(Full)};
+    {Client, {put_file, FileName, Content}} ->
+      {ok, File} = file:open([FileName],[write]),
+      Result = file:write(File, list_to_binary(Content)),
+      file:close(File),
+      Client ! {self(), {Result}}
   end,
   loop(Dir).
